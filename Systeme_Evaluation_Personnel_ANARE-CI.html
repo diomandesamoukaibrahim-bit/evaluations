@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Système d'Évaluation du Personnel — ANARE-CI</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bleu: #003b6f;
+    --bleu-clair: #0057a8;
+    --or: #c8a84b;
+    --or-clair: #e8c96e;
+    --vert: #1a7a4a;
+    --vert-clair: #e6f5ee;
+    --rouge: #c0392b;
+    --rouge-clair: #fdecea;
+    --mauve: #6c3483;
+    --mauve-clair: #f0e8f8;
+    --gris: #f4f6f9;
+    --gris-bord: #dde3ec;
+    --texte: #1a2535;
+    --texte-léger: #5a6a80;
+    --blanc: #ffffff;
+    --orange: #e67e22;
+    --orange-clair: #fef5ec;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--gris);
+    color: var(--texte);
+    min-height: 100vh;
+  }
+
+  /* ── BARRE LATÉRALE ── */
+  .sidebar {
+    position: fixed; left: 0; top: 0; bottom: 0; width: 240px;
+    background: var(--bleu);
+    display: flex; flex-direction: column;
+    z-index: 100;
+    box-shadow: 4px 0 20px rgba(0,0,0,.18);
+  }
+
+  .sidebar-logo {
+    padding: 28px 22px 20px;
+    border-bottom: 1px solid rgba(255,255,255,.1);
+  }
+  .sidebar-logo .anare { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 900; color: var(--or); letter-spacing: 2px; }
+  .sidebar-logo .sous { font-size: 10px; color: rgba(255,255,255,.55); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+
+  .sidebar-menu { flex: 1; padding: 18px 0; overflow-y: auto; }
+  .menu-section { padding: 8px 22px 4px; font-size: 9px; letter-spacing: 2px; color: rgba(255,255,255,.35); text-transform: uppercase; font-weight: 600; }
+
+  .menu-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 22px; cursor: pointer;
+    color: rgba(255,255,255,.7); font-size: 13px; font-weight: 400;
+    transition: all .2s; border-left: 3px solid transparent;
+    margin: 1px 0;
+  }
+  .menu-item:hover { background: rgba(255,255,255,.07); color: #fff; }
+  .menu-item.active { background: rgba(200,168,75,.15); color: var(--or-clair); border-left-color: var(--or); font-weight: 600; }
+  .menu-item .ico { font-size: 16px; width: 20px; text-align: center; }
+
+  .sidebar-footer {
+    padding: 16px 22px;
+    border-top: 1px solid rgba(255,255,255,.08);
+    font-size: 11px; color: rgba(255,255,255,.35);
+    text-align: center;
+  }
+
+  /* ── CONTENU PRINCIPAL ── */
+  .main { margin-left: 240px; min-height: 100vh; }
+
+  .topbar {
+    background: var(--blanc);
+    padding: 0 32px;
+    height: 64px; display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--gris-bord);
+    position: sticky; top: 0; z-index: 50;
+    box-shadow: 0 2px 8px rgba(0,0,0,.05);
+  }
+  .topbar-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: var(--bleu); }
+  .topbar-right { display: flex; align-items: center; gap: 16px; }
+  .badge-année { background: var(--or); color: var(--bleu); font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px; letter-spacing: 1px; }
+  .badge-proc { background: var(--gris); color: var(--texte-léger); font-size: 10px; padding: 4px 10px; border-radius: 20px; }
+
+  .content { padding: 28px 32px; }
+
+  /* ── PAGES ── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── ACCUEIL DASHBOARD ── */
+  .dash-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 28px; }
+  .dash-card {
+    background: var(--blanc); border-radius: 14px;
+    padding: 22px 24px;
+    border: 1px solid var(--gris-bord);
+    position: relative; overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,.04);
+    transition: transform .2s, box-shadow .2s;
+  }
+  .dash-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.09); }
+  .dash-card .dc-label { font-size: 11px; color: var(--texte-léger); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 8px; }
+  .dash-card .dc-val { font-family: 'Playfair Display', serif; font-size: 36px; font-weight: 700; color: var(--bleu); }
+  .dash-card .dc-sub { font-size: 12px; color: var(--texte-léger); margin-top: 4px; }
+  .dash-card .dc-ico { position: absolute; right: 20px; top: 20px; font-size: 28px; opacity: .15; }
+  .dash-card.or { border-top: 3px solid var(--or); }
+  .dash-card.vert { border-top: 3px solid var(--vert); }
+  .dash-card.bleu { border-top: 3px solid var(--bleu-clair); }
+  .dash-card.mauve { border-top: 3px solid var(--mauve); }
+  .dash-card.rouge { border-top: 3px solid var(--rouge); }
+  .dash-card.orange { border-top: 3px solid var(--orange); }
+
+  /* ── SECTION TITRE ── */
+  .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+  .section-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: var(--bleu); }
+  .section-sub { font-size: 12px; color: var(--texte-léger); margin-top: 2px; }
+
+  /* ── BOUTONS ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 20px; border-radius: 8px; border: none;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all .2s;
+  }
+  .btn-primary { background: var(--bleu); color: #fff; }
+  .btn-primary:hover { background: var(--bleu-clair); }
+  .btn-or { background: var(--or); color: var(--bleu); }
+  .btn-or:hover { background: var(--or-clair); }
+  .btn-vert { background: var(--vert); color: #fff; }
+  .btn-vert:hover { opacity: .88; }
+  .btn-outline { background: transparent; color: var(--bleu); border: 1.5px solid var(--bleu); }
+  .btn-outline:hover { background: var(--bleu); color: #fff; }
+  .btn-sm { padding: 7px 14px; font-size: 12px; }
+  .btn-danger { background: var(--rouge); color: #fff; }
+  .btn-danger:hover { opacity: .88; }
+
+  /* ── FORMULAIRE CHAUD ── */
+  .form-card {
+    background: var(--blanc); border-radius: 14px;
+    border: 1px solid var(--gris-bord);
+    box-shadow: 0 2px 10px rgba(0,0,0,.04);
+    overflow: hidden;
+  }
+  .form-header {
+    background: var(--bleu); color: #fff;
+    padding: 18px 28px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .form-header h3 { font-family: 'Playfair Display', serif; font-size: 16px; }
+  .form-header .ref { font-size: 11px; color: rgba(255,255,255,.6); }
+  .form-body { padding: 24px 28px; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 11px; font-weight: 600; color: var(--texte-léger); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 6px; }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%; padding: 10px 14px; border-radius: 8px;
+    border: 1.5px solid var(--gris-bord); font-family: 'DM Sans', sans-serif;
+    font-size: 13px; color: var(--texte); background: var(--gris);
+    transition: border .2s, background .2s;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    outline: none; border-color: var(--bleu-clair); background: #fff;
+  }
+  .form-group textarea { resize: vertical; min-height: 70px; }
+  .input-orange { border-color: var(--orange) !important; background: var(--orange-clair) !important; }
+  .input-vert { border-color: var(--vert) !important; background: var(--vert-clair) !important; }
+  .input-auto { border-color: var(--bleu-clair) !important; background: #e8f0fb !important; color: var(--bleu) !important; font-weight: 600 !important; }
+  .input-gris { background: #f0f2f5 !important; color: var(--texte-léger) !important; }
+
+  /* ── TABLE PARTICIPANTS ── */
+  .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--gris-bord); margin-top: 20px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  thead { background: var(--bleu); color: #fff; }
+  thead th { padding: 12px 10px; text-align: center; font-weight: 600; font-size: 11px; white-space: nowrap; }
+  thead th:first-child { text-align: left; padding-left: 16px; }
+  tbody tr { border-bottom: 1px solid var(--gris-bord); transition: background .15s; }
+  tbody tr:hover { background: #f8faff; }
+  tbody td { padding: 10px 8px; text-align: center; vertical-align: middle; }
+  tbody td:first-child { text-align: left; padding-left: 16px; font-weight: 500; }
+
+  .td-auto { background: #e8f0fb; color: var(--bleu); font-weight: 600; border-radius: 4px; padding: 5px 8px !important; font-size: 11px; }
+  .td-note input { width: 52px; padding: 5px 6px; border-radius: 6px; border: 1.5px solid var(--vert); background: var(--vert-clair); text-align: center; font-size: 12px; font-weight: 600; color: var(--vert); }
+  .td-note input:focus { outline: none; border-color: var(--vert); background: #fff; }
+  .td-mat input { width: 70px; padding: 5px 8px; border-radius: 6px; border: 1.5px solid var(--or); background: var(--orange-clair); text-align: center; font-size: 12px; }
+  .td-mat input:focus { outline: none; border-color: var(--or); background: #fff; }
+  .td-gris textarea { width: 140px; padding: 5px 8px; border-radius: 6px; border: 1.5px solid #ccc; background: #f5f5f5; font-size: 11px; resize: none; height: 40px; }
+  .moy-badge { padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 12px; display: inline-block; }
+  .moy-tb { background: #d4edda; color: #155724; }
+  .moy-b { background: #cce5ff; color: #004085; }
+  .moy-m { background: #fff3cd; color: #856404; }
+  .moy-i { background: #f8d7da; color: #721c24; }
+
+  /* ── TABLE FROID ── */
+  .td-avant input { width: 48px; padding: 5px 6px; border-radius: 6px; border: 1.5px solid var(--bleu-clair); background: #e8f0fb; text-align: center; font-size: 12px; font-weight: 600; color: var(--bleu); }
+  .td-apres input { width: 48px; padding: 5px 6px; border-radius: 6px; border: 1.5px solid var(--vert); background: var(--vert-clair); text-align: center; font-size: 12px; font-weight: 600; color: var(--vert); }
+  .td-sat input { width: 48px; padding: 5px 6px; border-radius: 6px; border: 1.5px solid var(--mauve); background: var(--mauve-clair); text-align: center; font-size: 12px; font-weight: 600; color: var(--mauve); }
+  .prog-pos { color: var(--vert); font-weight: 700; }
+  .prog-neg { color: var(--rouge); font-weight: 700; }
+
+  /* ── SÉLECTION FORMATION ── */
+  .formation-selector { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+  .formation-selector label { font-size: 13px; font-weight: 600; color: var(--texte); }
+  .formation-selector select { padding: 9px 14px; border-radius: 8px; border: 1.5px solid var(--gris-bord); font-size: 13px; background: #fff; min-width: 200px; }
+  .add-participant-btn { margin-top: 12px; }
+
+  /* ── TABLEAU DE BORD ── */
+  .tdb-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .tdb-table thead { background: linear-gradient(135deg, var(--bleu), var(--bleu-clair)); color: #fff; }
+  .tdb-table th { padding: 12px 10px; text-align: center; font-size: 11px; white-space: nowrap; }
+  .tdb-table th:first-child, .tdb-table th:nth-child(2) { text-align: left; padding-left: 14px; }
+  .tdb-table td { padding: 10px 10px; text-align: center; border-bottom: 1px solid var(--gris-bord); }
+  .tdb-table td:first-child, .tdb-table td:nth-child(2) { text-align: left; padding-left: 14px; font-weight: 500; }
+  .tdb-table tbody tr:hover { background: #f0f5ff; }
+  .tdb-table tfoot { background: var(--bleu); color: #fff; font-weight: 700; }
+  .tdb-table tfoot td { padding: 12px 10px; border: none; }
+
+  /* ── AGENTS ── */
+  .agents-search { margin-bottom: 16px; }
+  .agents-search input { width: 100%; max-width: 400px; padding: 11px 16px; border-radius: 8px; border: 1.5px solid var(--gris-bord); font-size: 13px; }
+  .agents-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .agents-table thead { background: var(--bleu); color: #fff; }
+  .agents-table th { padding: 12px 14px; text-align: left; font-size: 11px; font-weight: 600; }
+  .agents-table td { padding: 10px 14px; border-bottom: 1px solid var(--gris-bord); }
+  .agents-table tr:hover { background: #f8faff; }
+  .badge-cat { padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+  .cat-cadre { background: #dbeafe; color: #1e40af; }
+  .cat-maitrise { background: #d1fae5; color: #065f46; }
+  .cat-employe { background: #fef3c7; color: #92400e; }
+  .badge-genre { padding: 3px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; background: #f3e8ff; color: #6b21a8; }
+
+  /* ── LÉGENDE ── */
+  .legende { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
+  .leg-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--texte-léger); }
+  .leg-dot { width: 12px; height: 12px; border-radius: 3px; }
+
+  /* ── MODAL ── */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; display: none; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: #fff; border-radius: 16px; padding: 28px; min-width: 420px; max-width: 90vw; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+  .modal h3 { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--bleu); margin-bottom: 18px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+  /* ── ALERTES ── */
+  .alert { padding: 12px 18px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .alert-info { background: #e8f0fb; color: var(--bleu); border-left: 4px solid var(--bleu-clair); }
+  .alert-success { background: var(--vert-clair); color: var(--vert); border-left: 4px solid var(--vert); }
+  .alert-warn { background: var(--orange-clair); color: var(--orange); border-left: 4px solid var(--orange); }
+
+  /* ── NOTATION AIDE ── */
+  .note-help { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .note-chip { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .n4 { background: #d4edda; color: #155724; }
+  .n3 { background: #cce5ff; color: #004085; }
+  .n2 { background: #fff3cd; color: #856404; }
+  .n1 { background: #f8d7da; color: #721c24; }
+
+  /* ── IMPRESSION / EXPORT ── */
+  .export-zone { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  /* ── PROGRESS BAR ── */
+  .progress-bar { height: 6px; background: var(--gris-bord); border-radius: 3px; overflow: hidden; margin-top: 6px; }
+  .progress-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--vert), var(--or)); transition: width .5s; }
+
+  /* ── TABS ── */
+  .tabs { display: flex; gap: 0; border-bottom: 2px solid var(--gris-bord); margin-bottom: 24px; }
+  .tab { padding: 11px 20px; font-size: 13px; font-weight: 600; color: var(--texte-léger); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all .2s; }
+  .tab.active { color: var(--bleu); border-bottom-color: var(--bleu); }
+  .tab:hover { color: var(--bleu); }
+
+  /* ── NOTIFICATION ── */
+  .notif {
+    position: fixed; top: 20px; right: 20px; z-index: 9999;
+    background: var(--vert); color: #fff; padding: 14px 20px; border-radius: 10px;
+    font-size: 13px; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,.2);
+    transform: translateX(120%); transition: transform .3s;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .notif.show { transform: translateX(0); }
+
+  @media print {
+    .sidebar, .topbar, .btn, .formation-selector { display: none !important; }
+    .main { margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NOTIFICATION -->
+<div class="notif" id="notif">✅ <span id="notif-text">Sauvegardé</span></div>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="anare">ANARE-CI</div>
+    <div class="sous">Système d'Évaluation du Personnel</div>
+    <div style="margin-top:10px;display:flex;align-items:center;gap:8px">
+      <span style="font-size:10px;color:rgba(255,255,255,.5)">Année :</span>
+      <select id="global-annee" onchange="changeAnnee(this.value)" style="background:rgba(255,255,255,.1);color:var(--or);border:1px solid rgba(255,255,255,.2);border-radius:6px;padding:4px 8px;font-size:12px;font-weight:700;cursor:pointer">
+        <option value="2024">2024</option>
+        <option value="2025" selected>2025</option>
+        <option value="2026">2026</option>
+        <option value="2027">2027</option>
+        <option value="2028">2028</option>
+        <option value="2029">2029</option>
+        <option value="2030">2030</option>
+      </select>
+    </div>
+  </div>
+  <nav class="sidebar-menu">
+    <div class="menu-section">Principal</div>
+    <div class="menu-item active" onclick="goPage('accueil',this)"><span class="ico">🏠</span> Tableau de bord</div>
+    <div class="menu-section">Évaluations</div>
+    <div class="menu-item" onclick="goPage('chaud',this)"><span class="ico">🔥</span> Évaluation à Chaud</div>
+    <div class="menu-item" onclick="goPage('froid',this)"><span class="ico">❄️</span> Évaluation à Froid</div>
+    <div class="menu-section">Données</div>
+    <div class="menu-item" onclick="goPage('agents',this)"><span class="ico">👥</span> Répertoire Agents</div>
+    <div class="menu-item" onclick="goPage('synthese',this)"><span class="ico">📊</span> Synthèse Globale</div>
+    <div class="menu-section">Outils</div>
+    <div class="menu-item" onclick="exportData()"><span class="ico">💾</span> Exporter données</div>
+    <div class="menu-item" onclick="window.print()"><span class="ico">🖨️</span> Imprimer</div>
+  </nav>
+  <div class="sidebar-footer">Rév.2/EN 004 &bull; <span id="footer-annee">2025</span></div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="page-title">Tableau de Bord</div>
+    <div class="topbar-right">
+      <span class="badge-proc">Rév.2/EN 004</span>
+      <span class="badge-année" id="topbar-annee">2025</span>
+    </div>
+  </div>
+  <div class="content">
+
+    <!-- ══════════════ PAGE ACCUEIL ══════════════ -->
+    <div class="page active" id="page-accueil">
+      <div class="alert alert-info">📌 Bienvenue — Sélectionnez <strong>Évaluation à Chaud</strong> ou <strong>Évaluation à Froid</strong> pour saisir les données d'une formation.</div>
+      <div class="dash-grid" id="dash-stats"></div>
+
+      <div class="section-head">
+        <div>
+          <div class="section-title">Formations enregistrées</div>
+          <div class="section-sub">Vue d'ensemble des formations saisies cette année</div>
+        </div>
+      </div>
+      <div class="form-card">
+        <div class="table-wrap">
+          <table class="tdb-table" id="accueil-table">
+            <thead><tr>
+              <th style="text-align:left">Formation</th>
+              <th style="text-align:left">Titre</th>
+              <th>Participants</th>
+              <th>Moy. Chaud</th>
+              <th>Progression Froid</th>
+              <th>Satisfaction</th>
+              <th>Statut</th>
+            </tr></thead>
+            <tbody id="accueil-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ PAGE CHAUD ══════════════ -->
+    <div class="page" id="page-chaud">
+      <div class="formation-selector">
+        <label>Formation :</label>
+        <select id="chaud-form-select" onchange="loadChaud()">
+          <option value="">— Sélectionner une formation —</option>
+        </select>
+        <button class="btn btn-or btn-sm" onclick="nouvelleFormationChaud()">＋ Nouvelle formation</button>
+      </div>
+
+      <div id="chaud-container" style="display:none">
+        <div class="form-card" style="margin-bottom:20px">
+          <div class="form-header">
+            <div>
+              <h3>🔥 Fiche Évaluation à Chaud — <span id="chaud-ref">F01/2025</span></h3>
+              <div class="ref">Procédure : FORMATION | Rév. 2/EN 004 | Strictement confidentiel</div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-or btn-sm" onclick="saveChaud()">💾 Sauvegarder</button>
+            </div>
+          </div>
+          <div class="form-body">
+            <div class="form-row">
+              <div class="form-group"><label>🟠 Titre / Thème</label><input class="input-orange" id="c-titre" placeholder="Ex: Management et Leadership" oninput="markDirty()"></div>
+              <div class="form-group"><label>🟠 Organisme</label><input class="input-orange" id="c-organisme" placeholder="Ex: CEGOS" oninput="markDirty()"></div>
+              <div class="form-group"><label>🟠 Formateur</label><input class="input-orange" id="c-formateur" placeholder="Nom du formateur" oninput="markDirty()"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>🟠 Date</label><input class="input-orange" type="date" id="c-date" oninput="markDirty()"></div>
+              <div class="form-group"><label>🟠 Lieu</label><input class="input-orange" id="c-lieu" placeholder="Ex: Abidjan" oninput="markDirty()"></div>
+              <div class="form-group"><label>🟠 Durée</label><input class="input-orange" id="c-duree" placeholder="Ex: 3 jours" oninput="markDirty()"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-card">
+          <div class="form-header">
+            <h3>👥 Liste des participants</h3>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span style="font-size:12px;color:rgba(255,255,255,.7)" id="chaud-count">0 participant(s)</span>
+              <button class="btn btn-or btn-sm" onclick="addParticipantChaud()">＋ Ajouter</button>
+            </div>
+          </div>
+          <div class="form-body" style="padding:12px 16px">
+            <div class="note-help">
+              <span class="note-chip n4">4 = Très bon</span>
+              <span class="note-chip n3">3 = Bon</span>
+              <span class="note-chip n2">2 = Moyen</span>
+              <span class="note-chip n1">1 = Insatisfaisant</span>
+              <span style="font-size:11px;color:var(--texte-léger);margin-left:8px">Décimales acceptées (ex: 3.5)</span>
+            </div>
+            <div class="legende">
+              <div class="leg-item"><div class="leg-dot" style="background:var(--orange-clair);border:1.5px solid var(--orange)"></div> Matricule à saisir</div>
+              <div class="leg-item"><div class="leg-dot" style="background:#e8f0fb;border:1.5px solid var(--bleu-clair)"></div> Auto (ne pas modifier)</div>
+              <div class="leg-item"><div class="leg-dot" style="background:var(--vert-clair);border:1.5px solid var(--vert)"></div> Notes à saisir</div>
+              <div class="leg-item"><div class="leg-dot" style="background:#f5f5f5;border:1.5px solid #ccc"></div> Commentaires (optionnel)</div>
+            </div>
+            <div class="table-wrap" style="margin-top:0">
+              <table>
+                <thead><tr>
+                  <th>N°</th><th>Matricule</th><th>Nom & Prénoms</th><th>Catégorie</th><th>Direction</th>
+                  <th>Salle</th><th>Matériels</th><th>Pause</th><th>Méthodologie</th>
+                  <th>Cas Pratiques</th><th>Qualité Prestation</th><th>Cohérence Durée</th>
+                  <th>Cohérence Objectifs</th><th>Satisfaction</th><th>Moyenne</th>
+                  <th>Aspects retenus</th><th>Suggestions</th><th>Action</th>
+                </tr></thead>
+                <tbody id="chaud-tbody"></tbody>
+                <tfoot><tr id="chaud-moyennes" style="background:#f0f5ff;font-weight:700;font-size:12px">
+                  <td colspan="5" style="padding:10px 16px;color:var(--bleu)">✅ MOYENNES</td>
+                  <td id="cm-salle"></td><td id="cm-mat"></td><td id="cm-pause"></td>
+                  <td id="cm-meth"></td><td id="cm-cas"></td><td id="cm-qual"></td>
+                  <td id="cm-dur"></td><td id="cm-obj"></td><td id="cm-sat"></td>
+                  <td id="cm-moy"></td><td colspan="3"></td>
+                </tr></tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ PAGE FROID ══════════════ -->
+    <div class="page" id="page-froid">
+      <div class="formation-selector">
+        <label>Formation :</label>
+        <select id="froid-form-select" onchange="loadFroid()">
+          <option value="">— Sélectionner une formation —</option>
+        </select>
+        <button class="btn btn-or btn-sm" onclick="nouvelleFormationFroid()">＋ Nouvelle formation</button>
+      </div>
+
+      <div id="froid-container" style="display:none">
+        <div class="form-card" style="margin-bottom:20px">
+          <div class="form-header">
+            <div>
+              <h3>❄️ Fiche Évaluation à Froid — <span id="froid-ref">F01/2025</span></h3>
+              <div class="ref">Procédure : FORMATION | Rév. 2/EN 004 | Strictement confidentiel</div>
+            </div>
+            <button class="btn btn-or btn-sm" onclick="saveFroid()">💾 Sauvegarder</button>
+          </div>
+          <div class="form-body">
+            <div class="form-row">
+              <div class="form-group"><label>🟠 Titre / Thème</label><input class="input-orange" id="f-titre" placeholder="Titre de la formation" oninput="markDirty()"></div>
+              <div class="form-group"><label>🟠 Organisme</label><input class="input-orange" id="f-organisme" placeholder="Organisme formateur" oninput="markDirty()"></div>
+              <div class="form-group"><label>🟠 Lieu</label><input class="input-orange" id="f-lieu" placeholder="Ex: Abidjan" oninput="markDirty()"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>🟠 Date début</label><input class="input-orange" type="date" id="f-debut" oninput="markDirty()"></div>
+              <div class="form-group"><label>🟠 Date fin</label><input class="input-orange" type="date" id="f-fin" oninput="markDirty()"></div>
+              <div class="form-group"><label>🟠 Durée</label><input class="input-orange" id="f-duree" placeholder="Ex: 5 jours" oninput="markDirty()"></div>
+            </div>
+            <div style="margin-top:8px">
+              <label style="font-size:11px;font-weight:600;color:var(--texte-léger);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:8px">🟠 Compétences évaluées (max 8)</label>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px" id="comp-inputs"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-card">
+          <div class="form-header">
+            <h3>👥 Liste des participants</h3>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span style="font-size:12px;color:rgba(255,255,255,.7)" id="froid-count">0 participant(s)</span>
+              <button class="btn btn-or btn-sm" onclick="addParticipantFroid()">＋ Ajouter</button>
+            </div>
+          </div>
+          <div class="form-body" style="padding:12px 16px">
+            <div class="note-help">
+              <span class="note-chip" style="background:#e8f0fb;color:var(--bleu)">Avant : 1=Notion 2=Application 3=Maîtrise 4=Expert</span>
+              <span class="note-chip n4">Après : 1→4</span>
+              <span class="note-chip" style="background:var(--mauve-clair);color:var(--mauve)">Satisfaction : 4=Entièrement d'accord → 1=Pas de cet avis</span>
+            </div>
+            <div class="table-wrap" style="margin-top:0">
+              <table id="froid-table">
+                <thead id="froid-thead"></thead>
+                <tbody id="froid-tbody"></tbody>
+                <tfoot id="froid-tfoot"></tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ PAGE AGENTS ══════════════ -->
+    <div class="page" id="page-agents">
+      <div class="section-head">
+        <div><div class="section-title">Répertoire des Agents ANARE-CI</div><div class="section-sub" id="agents-count-label"></div></div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-primary btn-sm" onclick="openAddAgent()">＋ Ajouter un agent</button>
+        </div>
+      </div>
+      <div class="agents-search"><input type="text" placeholder="🔍 Rechercher par nom, matricule, direction..." id="agent-search" oninput="filterAgents()" /></div>
+      <div class="form-card">
+        <div class="table-wrap" style="margin-top:0">
+          <table class="agents-table">
+            <thead><tr><th>Matricule</th><th>Nom & Prénoms</th><th>Catégorie</th><th>Fonction</th><th>Direction</th><th>Genre</th><th>Action</th></tr></thead>
+            <tbody id="agents-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ PAGE SYNTHÈSE ══════════════ -->
+    <div class="page" id="page-synthese">
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('tab-chaud',this)">🔥 Synthèse Chaud</div>
+        <div class="tab" onclick="switchTab('tab-froid',this)">❄️ Synthèse Froid</div>
+      </div>
+
+      <div id="tab-chaud">
+        <div class="form-card">
+          <div class="form-header"><h3>📊 Tableau de bord — Évaluations à Chaud 2025</h3></div>
+          <div class="form-body" style="padding:12px 16px">
+            <div class="table-wrap" style="margin-top:0">
+              <table class="tdb-table">
+                <thead><tr>
+                  <th>Formation</th><th>Titre</th><th>Participants</th>
+                  <th>Salle</th><th>Matériels</th><th>Pause</th><th>Méthodo.</th>
+                  <th>Cas Prat.</th><th>Qualité</th><th>Durée</th><th>Objectifs</th>
+                  <th>Satisfaction</th><th>Moy. Globale</th>
+                </tr></thead>
+                <tbody id="synth-chaud-tbody"></tbody>
+                <tfoot id="synth-chaud-tfoot"></tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="tab-froid" style="display:none">
+        <div class="form-card">
+          <div class="form-header"><h3>📊 Tableau de bord — Évaluations à Froid 2025</h3></div>
+          <div class="form-body" style="padding:12px 16px">
+            <div class="table-wrap" style="margin-top:0">
+              <table class="tdb-table">
+                <thead><tr>
+                  <th>Formation</th><th>Titre</th><th>Participants</th>
+                  <th>Moy. Avant</th><th>Moy. Après</th><th>Progression</th>
+                  <th>Taux Satisfaction</th><th>Agents Satisfaits</th>
+                </tr></thead>
+                <tbody id="synth-froid-tbody"></tbody>
+                <tfoot id="synth-froid-tfoot"></tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- MODAL AGENT -->
+<div class="modal-overlay" id="modal-agent">
+  <div class="modal">
+    <h3>👤 Nouvel Agent</h3>
+    <div class="form-row-2">
+      <div class="form-group"><label>Matricule</label><input id="ag-mat" placeholder="Ex: 164A"></div>
+      <div class="form-group"><label>Genre</label><select id="ag-genre"><option value="H">Homme</option><option value="F">Femme</option></select></div>
+    </div>
+    <div class="form-group" style="margin-bottom:14px"><label>Nom & Prénoms</label><input id="ag-nom" placeholder="NOM Prénom(s)"></div>
+    <div class="form-row-2">
+      <div class="form-group"><label>Catégorie</label><select id="ag-cat"><option>Cadre</option><option>Maitrise</option><option>Employé</option></select></div>
+      <div class="form-group"><label>Direction</label><input id="ag-dir" placeholder="Ex: DAF"></div>
+    </div>
+    <div class="form-group"><label>Fonction</label><input id="ag-fonc" placeholder="Titre du poste"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-agent')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveAgent()">✅ Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  DONNÉES INITIALES
+// ══════════════════════════════════════════════
+let anneeActive = localStorage.getItem('anare_annee') || '2025';
+
+function changeAnnee(a) {
+  if (dirty && !confirm('Vous avez des modifications non sauvegardées. Changer d\'année quand même ?')) {
+    document.getElementById('global-annee').value = anneeActive;
+    return;
+  }
+  anneeActive = a;
+  localStorage.setItem('anare_annee', a);
+  document.getElementById('topbar-annee').textContent = a;
+  document.getElementById('footer-annee').textContent = a;
+  // Recharger données de l'année sélectionnée
+  loadAnneeData();
+  buildSelectors();
+  renderAgents();
+  renderDashboard();
+  currentChaudId = null;
+  currentFroidId = null;
+  document.getElementById('chaud-container').style.display = 'none';
+  document.getElementById('froid-container').style.display = 'none';
+  document.getElementById('chaud-form-select').value = '';
+  document.getElementById('froid-form-select').value = '';
+  showNotif('Année ' + a + ' chargée ✅');
+}
+
+function loadAnneeData() {
+  formationsChaud = JSON.parse(localStorage.getItem('anare_chaud_' + anneeActive) || '[]');
+  formationsFroid = JSON.parse(localStorage.getItem('anare_froid_' + anneeActive) || '[]');
+}
+const AGENTS_INIT = [
+  {mat:'008H',nom:'OUIGNAN Martin',cat:'Cadre',fonc:'Directeur Administratif et Financier',dir:'DAF',genre:'H'},
+  {mat:'009I',nom:"ASSOUKPOU N'Franny-Flora",cat:'Maitrise',fonc:'Assistante du PCR',dir:'PCR',genre:'F'},
+  {mat:'015P',nom:'KROU Henri Pépin',cat:'Cadre',fonc:'Conseiller Spécial',dir:'DG',genre:'H'},
+  {mat:'017R',nom:'AKA Francis Ketiboah',cat:'Cadre',fonc:'Conseiller',dir:'DG',genre:'H'},
+  {mat:'022W',nom:'AHOULI Yao Didier',cat:'Cadre',fonc:'Chef de Service Informatique',dir:'DINT',genre:'H'},
+  {mat:'026A',nom:'OUAKOUBOU Gnezié Jean Marcel',cat:'Employé',fonc:'Agent Technique Maintenance',dir:'DINT',genre:'H'},
+  {mat:'043S',nom:'KOUADIO Bonin Aya Bertine',cat:'Cadre',fonc:'Directeur Juridique Adjoint',dir:'DJ',genre:'F'},
+  {mat:'049Y',nom:'BAGODOU Agnimou Boullo Reine Esther',cat:'Cadre',fonc:'Chef de Service RH',dir:'DAF',genre:'F'},
+  {mat:'055E',nom:'TAH Lou Tra Emma',cat:'Maitrise',fonc:'Secrétaire de Direction',dir:'DC',genre:'F'},
+  {mat:'071V',nom:'SOMBO Achou Arnaud',cat:'Cadre',fonc:'Directeur Consommateurs',dir:'DC',genre:'H'},
+  {mat:'075Z',nom:'KOUDOU Yobo Apollinaire',cat:'Cadre',fonc:'Directeur Adjoint Admin. Finance',dir:'DAF',genre:'H'},
+  {mat:'076A',nom:'BLE Kouassi Eugène',cat:'Cadre',fonc:'Chef de Service Comptabilité',dir:'DAF',genre:'H'},
+  {mat:'078C',nom:'DIANE Akassi Marie José',cat:'Cadre',fonc:'Chef de Service Moyens Généraux',dir:'DAF',genre:'F'},
+  {mat:'081F',nom:'BROU Apie Nina Celine',cat:'Maitrise',fonc:'Agent Technique Archivage',dir:'DINT',genre:'F'},
+  {mat:'093S',nom:"N'DRIN Brou Stéphane",cat:'Cadre',fonc:'Directeur Juridique',dir:'DJ',genre:'H'},
+  {mat:'099Z',nom:'AHUI Sasson Camille',cat:'Maitrise',fonc:'Agent Technique Vulgarisation',dir:'DC',genre:'H'},
+  {mat:'102C',nom:'ACHI Bessecon Alain Gilles',cat:'Cadre',fonc:'Chef de Service Consommateurs Intérieur',dir:'DC',genre:'H'},
+  {mat:'104E',nom:'COULIBALY Moussa Doméhé',cat:'Cadre',fonc:'Cadre Contrôle Technique Distribution',dir:'DT',genre:'H'},
+  {mat:'105F',nom:'YAO Gnamien Emmanuelle',cat:'Cadre',fonc:'Chef de Service Tarification',dir:'DEF',genre:'F'},
+  {mat:'112M',nom:'ADOU Amah Pascaline',cat:'Cadre',fonc:'Cadre Comptable',dir:'DAF',genre:'F'},
+  {mat:'118T',nom:'MONDON Chiapault Gilles-Arnaud',cat:'Cadre',fonc:'Chef de Service Contrôle Financier',dir:'DEF',genre:'H'},
+  {mat:'120V',nom:'KAKADIE Affessi Rosine Hélène',cat:'Cadre',fonc:'Chef de Service Communication',dir:'DG',genre:'F'},
+  {mat:'121W',nom:'KOUAME Raïssa Rita',cat:'Cadre',fonc:'Chef de Service Consommateurs Abidjan',dir:'DC',genre:'F'},
+  {mat:'122Y',nom:'MIEZAN Eba Victoire',cat:'Cadre',fonc:'Cadre Chargée de Recours',dir:'DC',genre:'F'},
+  {mat:'123Z',nom:"N'GBESSO Franck Michel",cat:'Cadre',fonc:'Cadre Contrôle Technique Distribution',dir:'DT',genre:'H'},
+  {mat:'136J',nom:'MONSOH Doffou Marc Elisée',cat:'Cadre',fonc:'Directeur Economique et Financier',dir:'DEF',genre:'H'},
+  {mat:'137K',nom:"M'BRA Kouassi Desmond",cat:'Cadre',fonc:"Chef de Service Audit Interne",dir:'DG',genre:'H'},
+  {mat:'139M',nom:"KOUAKOU N'guessan Kan Constant",cat:'Cadre',fonc:'Cadre Développement RH',dir:'DAF',genre:'H'},
+  {mat:'141P',nom:'ZAMBLE Raoul Junior',cat:'Cadre',fonc:'Chef de Service Production Transport',dir:'DT',genre:'H'},
+  {mat:'142R',nom:'BEHIRI Ange-Patricia',cat:'Cadre',fonc:'Chef de Service Contrats Règlementation',dir:'DJ',genre:'F'},
+  {mat:'144T',nom:'TRAORE Amidou',cat:'Cadre',fonc:'Directeur Général',dir:'DG',genre:'H'},
+  {mat:'147W',nom:'TOPE Epse NOBOUT Beugré Diane',cat:'Cadre',fonc:'Cadre QSE-RSE',dir:'DG',genre:'F'},
+  {mat:'148Y',nom:'DIAKITE Sékou Tidiane',cat:'Cadre',fonc:'Cadre Juriste',dir:'DJ',genre:'H'},
+  {mat:'151B',nom:'YEO Torna',cat:'Cadre',fonc:'Cadre Gestion de données',dir:'DINT',genre:'H'},
+  {mat:'152C',nom:'ASSEMIAN Ebah Claude-Axel',cat:'Cadre',fonc:'Cadre Audit Interne',dir:'DG',genre:'H'},
+  {mat:'153D',nom:'DIALLO Ténin Djénéba',cat:'Cadre',fonc:'Cadre Juriste',dir:'DJ',genre:'F'},
+  {mat:'154E',nom:'YOMAN Micisso Marguérite',cat:'Cadre',fonc:'Chef de Service Contentieux',dir:'DJ',genre:'F'},
+  {mat:'155F',nom:'SORO Chiombin Kassoum',cat:'Cadre',fonc:'Directeur Innovation Nouvelles Technologies',dir:'DINT',genre:'H'},
+  {mat:'156G',nom:'BLEDOU Ekra Laurent',cat:'Cadre',fonc:'Directeur Technique',dir:'DT',genre:'H'},
+  {mat:'159J',nom:'TCHA Kouhadio Goli',cat:'Cadre',fonc:'Chef de Service Distribution',dir:'DT',genre:'H'},
+  {mat:'160K',nom:'ABOUA Blandine Flora',cat:'Cadre',fonc:'Cadre Analyste Financier',dir:'DEF',genre:'F'},
+  {mat:'162M',nom:'BAIKRO Nambessé',cat:'Maitrise',fonc:'Chargée de Mission',dir:'PCR',genre:'F'},
+];
+
+// ── ÉTAT GLOBAL ──
+let agents = JSON.parse(localStorage.getItem('anare_agents') || 'null') || AGENTS_INIT;
+let formationsChaud = JSON.parse(localStorage.getItem('anare_chaud_' + anneeActive) || '[]');
+let formationsFroid = JSON.parse(localStorage.getItem('anare_froid_' + anneeActive) || '[]');
+let currentChaudId = null;
+let currentFroidId = null;
+let dirty = false;
+
+// ── INIT ──
+window.onload = () => {
+  // Restaurer l'année active
+  document.getElementById('global-annee').value = anneeActive;
+  document.getElementById('topbar-annee').textContent = anneeActive;
+  document.getElementById('footer-annee').textContent = anneeActive;
+  buildSelectors();
+  renderAgents();
+  renderDashboard();
+  buildCompInputs();
+};
+
+function save() {
+  localStorage.setItem('anare_agents', JSON.stringify(agents));
+  localStorage.setItem('anare_chaud_' + anneeActive, JSON.stringify(formationsChaud));
+  localStorage.setItem('anare_froid_' + anneeActive, JSON.stringify(formationsFroid));
+  dirty = false;
+}
+
+function markDirty() { dirty = true; }
+
+function showNotif(msg, color='var(--vert)') {
+  const n = document.getElementById('notif');
+  document.getElementById('notif-text').textContent = msg;
+  n.style.background = color;
+  n.classList.add('show');
+  setTimeout(() => n.classList.remove('show'), 2800);
+}
+
+// ── NAVIGATION ──
+function goPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (el) el.classList.add('active');
+  const titles = {accueil:'Tableau de Bord',chaud:'Évaluation à Chaud',froid:'Évaluation à Froid',agents:'Répertoire des Agents',synthese:'Synthèse Globale'};
+  document.getElementById('page-title').textContent = titles[id] || '';
+  if (id === 'accueil') renderDashboard();
+  if (id === 'synthese') renderSynthese();
+}
+
+// ── AGENTS ──
+function getAgent(mat) { return agents.find(a => a.mat === mat.trim().toUpperCase()); }
+
+function renderAgents(filter='') {
+  const fl = filter.toLowerCase();
+  const list = fl ? agents.filter(a =>
+    a.mat.toLowerCase().includes(fl) || a.nom.toLowerCase().includes(fl) ||
+    a.dir.toLowerCase().includes(fl) || a.fonc.toLowerCase().includes(fl)
+  ) : agents;
+  document.getElementById('agents-count-label').textContent = `${list.length} agent(s) — Total: ${agents.length}`;
+  const catClass = {Cadre:'cat-cadre',Maitrise:'cat-maitrise',Employé:'cat-employe'};
+  document.getElementById('agents-tbody').innerHTML = list.map(a => `
+    <tr>
+      <td><strong>${a.mat}</strong></td>
+      <td>${a.nom}</td>
+      <td><span class="badge-cat ${catClass[a.cat]||''}">${a.cat}</span></td>
+      <td>${a.fonc}</td>
+      <td>${a.dir}</td>
+      <td><span class="badge-genre">${a.genre}</span></td>
+      <td><button class="btn btn-danger btn-sm" onclick="deleteAgent('${a.mat}')">🗑</button></td>
+    </tr>`).join('');
+}
+
+function filterAgents() { renderAgents(document.getElementById('agent-search').value); }
+
+function openAddAgent() { document.getElementById('modal-agent').classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function saveAgent() {
+  const mat = document.getElementById('ag-mat').value.trim().toUpperCase();
+  const nom = document.getElementById('ag-nom').value.trim();
+  if (!mat || !nom) { showNotif('Matricule et nom requis', 'var(--rouge)'); return; }
+  if (agents.find(a => a.mat === mat)) { showNotif('Ce matricule existe déjà', 'var(--orange)'); return; }
+  agents.push({mat, nom, cat:document.getElementById('ag-cat').value, fonc:document.getElementById('ag-fonc').value, dir:document.getElementById('ag-dir').value.toUpperCase(), genre:document.getElementById('ag-genre').value});
+  agents.sort((a,b) => a.mat.localeCompare(b.mat));
+  save(); renderAgents(); closeModal('modal-agent');
+  showNotif(`Agent ${nom} ajouté`);
+  ['ag-mat','ag-nom','ag-fonc','ag-dir'].forEach(id => document.getElementById(id).value = '');
+}
+
+function deleteAgent(mat) {
+  if (!confirm(`Supprimer l'agent ${mat} ?`)) return;
+  agents = agents.filter(a => a.mat !== mat);
+  save(); renderAgents();
+  showNotif('Agent supprimé', 'var(--orange)');
+}
+
+// ── SÉLECTEURS FORMATIONS ──
+function buildSelectors() {
+  const optC = formationsChaud.map((f,i) => `<option value="${i}">${f.ref} — ${f.titre||'(sans titre)'}</option>`).join('');
+  const optF = formationsFroid.map((f,i) => `<option value="${i}">${f.ref} — ${f.titre||'(sans titre)'}</option>`).join('');
+  document.getElementById('chaud-form-select').innerHTML = '<option value="">— Sélectionner —</option>' + optC;
+  document.getElementById('froid-form-select').innerHTML = '<option value="">— Sélectionner —</option>' + optF;
+}
+
+// ══ ÉVAL CHAUD ══
+function nouvelleFormationChaud() {
+  const num = formationsChaud.length + 1;
+  const ref = 'F' + String(num).padStart(2,'0') + '/2025';
+  formationsChaud.push({ref, titre:'', organisme:'', formateur:'', date:'', lieu:'', duree:'', participants:[]});
+  save(); buildSelectors();
+  document.getElementById('chaud-form-select').value = formationsChaud.length - 1;
+  loadChaud();
+}
+
+function loadChaud() {
+  const idx = document.getElementById('chaud-form-select').value;
+  if (idx === '') { document.getElementById('chaud-container').style.display='none'; return; }
+  currentChaudId = parseInt(idx);
+  const f = formationsChaud[currentChaudId];
+  document.getElementById('chaud-ref').textContent = f.ref;
+  document.getElementById('c-titre').value = f.titre || '';
+  document.getElementById('c-organisme').value = f.organisme || '';
+  document.getElementById('c-formateur').value = f.formateur || '';
+  document.getElementById('c-date').value = f.date || '';
+  document.getElementById('c-lieu').value = f.lieu || '';
+  document.getElementById('c-duree').value = f.duree || '';
+  document.getElementById('chaud-container').style.display = 'block';
+  renderChaudTable();
+}
+
+function addParticipantChaud() {
+  if (currentChaudId === null) return;
+  formationsChaud[currentChaudId].participants.push({mat:'',salle:'',mat_ped:'',pause:'',meth:'',cas:'',qual:'',dur:'',obj:'',sat:'',aspects:'',sugg:''});
+  renderChaudTable();
+}
+
+function renderChaudTable() {
+  const f = formationsChaud[currentChaudId];
+  const ps = f.participants;
+  document.getElementById('chaud-count').textContent = ps.length + ' participant(s)';
+  const NOTES = ['salle','mat_ped','pause','meth','cas','qual','dur','obj','sat'];
+
+  document.getElementById('chaud-tbody').innerHTML = ps.map((p,i) => {
+    const ag = getAgent(p.mat || '');
+    return `<tr>
+      <td>${i+1}</td>
+      <td class="td-mat"><input value="${p.mat}" placeholder="Mat." onchange="updateChaudPart(${i},'mat',this.value);updateChaudAuto(${i})" onblur="updateChaudAuto(${i})"></td>
+      <td><span class="td-auto" id="cn-${i}">${ag?ag.nom:'—'}</span></td>
+      <td><span class="td-auto">${ag?ag.cat:'—'}</span></td>
+      <td><span class="td-auto">${ag?ag.dir:'—'}</span></td>
+      ${NOTES.map(k=>`<td class="td-note"><input type="number" min="1" max="4" step="0.5" value="${p[k]||''}" onchange="updateChaudPart(${i},'${k}',this.value);calcChaudMoy(${i})"></td>`).join('')}
+      <td id="cm-r-${i}"></td>
+      <td><textarea onchange="updateChaudPart(${i},'aspects',this.value)">${p.aspects||''}</textarea></td>
+      <td><textarea onchange="updateChaudPart(${i},'sugg',this.value)">${p.sugg||''}</textarea></td>
+      <td><button class="btn btn-danger btn-sm" onclick="removeChaudPart(${i})">🗑</button></td>
+    </tr>`;
+  }).join('');
+  ps.forEach((_,i) => calcChaudMoy(i));
+  calcChaudFooter();
+}
+
+function updateChaudPart(i, k, v) {
+  formationsChaud[currentChaudId].participants[i][k] = v;
+}
+
+function updateChaudAuto(i) {
+  const p = formationsChaud[currentChaudId].participants[i];
+  const ag = getAgent(p.mat || '');
+  const el = document.getElementById('cn-' + i);
+  if (el) el.textContent = ag ? ag.nom : '—';
+}
+
+function calcChaudMoy(i) {
+  const p = formationsChaud[currentChaudId].participants[i];
+  const NOTES = ['salle','mat_ped','pause','meth','cas','qual','dur','obj','sat'];
+  const vals = NOTES.map(k => parseFloat(p[k])).filter(v => !isNaN(v));
+  const moy = vals.length ? (vals.reduce((a,b)=>a+b,0)/vals.length) : null;
+  const el = document.getElementById('cm-r-' + i);
+  if (el) el.innerHTML = moy !== null ? `<span class="moy-badge ${moyClass(moy)}">${moy.toFixed(2)}</span>` : '—';
+}
+
+function moyClass(m) {
+  if (m >= 3.5) return 'moy-tb';
+  if (m >= 2.5) return 'moy-b';
+  if (m >= 1.5) return 'moy-m';
+  return 'moy-i';
+}
+
+function calcChaudFooter() {
+  const ps = formationsChaud[currentChaudId].participants;
+  const NOTES = ['salle','mat_ped','pause','meth','cas','qual','dur','obj','sat'];
+  const ids = ['cm-salle','cm-mat','cm-pause','cm-meth','cm-cas','cm-qual','cm-dur','cm-obj','cm-sat','cm-moy'];
+  NOTES.forEach((k,j) => {
+    const vals = ps.map(p => parseFloat(p[k])).filter(v => !isNaN(v));
+    const moy = vals.length ? (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2) : '—';
+    const el = document.getElementById(ids[j]);
+    if (el) el.textContent = moy;
+  });
+  const allVals = ps.flatMap(p => NOTES.map(k => parseFloat(p[k])).filter(v => !isNaN(v)));
+  const moyGlob = allVals.length ? (allVals.reduce((a,b)=>a+b,0)/allVals.length).toFixed(2) : '—';
+  const el = document.getElementById('cm-moy');
+  if (el) el.innerHTML = moyGlob !== '—' ? `<span class="moy-badge ${moyClass(parseFloat(moyGlob))}">${moyGlob}</span>` : '—';
+}
+
+function removeChaudPart(i) {
+  formationsChaud[currentChaudId].participants.splice(i,1);
+  renderChaudTable();
+}
+
+function saveChaud() {
+  const f = formationsChaud[currentChaudId];
+  f.titre = document.getElementById('c-titre').value;
+  f.organisme = document.getElementById('c-organisme').value;
+  f.formateur = document.getElementById('c-formateur').value;
+  f.date = document.getElementById('c-date').value;
+  f.lieu = document.getElementById('c-lieu').value;
+  f.duree = document.getElementById('c-duree').value;
+  save(); buildSelectors(); showNotif(`${f.ref} sauvegardée ✅`);
+}
+
+// ══ ÉVAL FROID ══
+function buildCompInputs() {
+  document.getElementById('comp-inputs').innerHTML = Array.from({length:8},(_,i) =>
+    `<div class="form-group"><label>Compétence ${i+1}</label><input class="input-orange" id="comp-${i}" placeholder="Nom de la compétence" oninput="markDirty()"></div>`
+  ).join('');
+}
+
+function nouvelleFormationFroid() {
+  const num = formationsFroid.length + 1;
+  const ref = 'F' + String(num).padStart(2,'0') + '/2025';
+  formationsFroid.push({ref, titre:'', organisme:'', lieu:'', debut:'', fin:'', duree:'', comps:['','','','','','','',''], participants:[]});
+  save(); buildSelectors();
+  document.getElementById('froid-form-select').value = formationsFroid.length - 1;
+  loadFroid();
+}
+
+function loadFroid() {
+  const idx = document.getElementById('froid-form-select').value;
+  if (idx === '') { document.getElementById('froid-container').style.display='none'; return; }
+  currentFroidId = parseInt(idx);
+  const f = formationsFroid[currentFroidId];
+  document.getElementById('froid-ref').textContent = f.ref;
+  document.getElementById('f-titre').value = f.titre || '';
+  document.getElementById('f-organisme').value = f.organisme || '';
+  document.getElementById('f-lieu').value = f.lieu || '';
+  document.getElementById('f-debut').value = f.debut || '';
+  document.getElementById('f-fin').value = f.fin || '';
+  document.getElementById('f-duree').value = f.duree || '';
+  (f.comps || []).forEach((c,i) => { const el = document.getElementById('comp-'+i); if(el) el.value = c; });
+  document.getElementById('froid-container').style.display = 'block';
+  renderFroidTable();
+}
+
+function addParticipantFroid() {
+  if (currentFroidId === null) return;
+  const f = formationsFroid[currentFroidId];
+  const comps = f.comps || [];
+  const nComps = comps.filter(c=>c).length || 4;
+  formationsFroid[currentFroidId].participants.push({mat:'', avant:Array(nComps).fill(''), apres:Array(nComps).fill(''), sat:['','','','',''], sugg:''});
+  renderFroidTable();
+}
+
+function renderFroidTable() {
+  const f = formationsFroid[currentFroidId];
+  const comps = (f.comps || []).map((c,i) => c || `Comp.${i+1}`);
+  const nC = comps.filter((c,i) => f.comps[i]).length || 4;
+  const activeComps = comps.slice(0, nC);
+  document.getElementById('froid-count').textContent = f.participants.length + ' participant(s)';
+
+  const SATS = ["Concertation avec supérieur","Rapport avec activité","Besoin réel","Application des connaissances","Recommanderiez à un collègue"];
+
+  // THEAD
+  document.getElementById('froid-thead').innerHTML = `<tr>
+    <th>N°</th><th>Matricule</th><th>Nom</th><th>Cat.</th><th>Dir.</th>
+    ${activeComps.map(c=>`<th style="background:rgba(255,255,255,.15)">${c}<br><small>AVANT</small></th>`).join('')}
+    <th>Tot.Av.</th>
+    ${activeComps.map(c=>`<th style="background:rgba(200,255,200,.2)">${c}<br><small>APRÈS</small></th>`).join('')}
+    <th>Tot.Ap.</th><th>Prog.</th>
+    ${SATS.map((s,i)=>`<th style="background:rgba(180,150,220,.2)">Q${i+1}</th>`).join('')}
+    <th>Tot.Q</th><th>Taux%</th><th>Suggestions</th><th>Action</th>
+  </tr>`;
+
+  // TBODY
+  document.getElementById('froid-tbody').innerHTML = f.participants.map((p,i) => {
+    const ag = getAgent(p.mat || '');
+    const avant = p.avant || [];
+    const apres = p.apres || [];
+    const sat = p.sat || [];
+    const totAv = avant.slice(0,nC).filter(v=>v!=='').reduce((a,b)=>a+(parseFloat(b)||0),0);
+    const moyAv = avant.slice(0,nC).filter(v=>v!=='').length ? (totAv/avant.slice(0,nC).filter(v=>v!=='').length).toFixed(2) : '—';
+    const totAp = apres.slice(0,nC).filter(v=>v!=='').reduce((a,b)=>a+(parseFloat(b)||0),0);
+    const moyAp = apres.slice(0,nC).filter(v=>v!=='').length ? (totAp/apres.slice(0,nC).filter(v=>v!=='').length).toFixed(2) : '—';
+    const prog = (moyAv !== '—' && moyAp !== '—') ? (parseFloat(moyAp)-parseFloat(moyAv)).toFixed(2) : '—';
+    const totQ = sat.filter(v=>v!=='').reduce((a,b)=>a+(parseFloat(b)||0),0);
+    const tauxQ = sat.filter(v=>v!=='').length ? Math.round((totQ/(sat.filter(v=>v!=='').length*4))*100) : '—';
+
+    return `<tr>
+      <td>${i+1}</td>
+      <td class="td-mat"><input value="${p.mat||''}" placeholder="Mat." onchange="updateFroidPart(${i},'mat',this.value)" onblur="updateFroidAuto(${i},this)"></td>
+      <td><span class="td-auto" id="fn-${i}">${ag?ag.nom:'—'}</span></td>
+      <td><span class="td-auto">${ag?ag.cat:'—'}</span></td>
+      <td><span class="td-auto">${ag?ag.dir:'—'}</span></td>
+      ${activeComps.map((_,j)=>`<td class="td-avant"><input type="number" min="1" max="4" step="1" value="${avant[j]||''}" onchange="updateFroidAvant(${i},${j},this.value);renderFroidRow(${i})"></td>`).join('')}
+      <td><strong>${moyAv}</strong></td>
+      ${activeComps.map((_,j)=>`<td class="td-apres"><input type="number" min="1" max="4" step="1" value="${apres[j]||''}" onchange="updateFroidApres(${i},${j},this.value);renderFroidRow(${i})"></td>`).join('')}
+      <td><strong>${moyAp}</strong></td>
+      <td class="${prog!=='—'&&parseFloat(prog)>=0?'prog-pos':'prog-neg'}">${prog!=='—'?'▲ '+prog:'-'}</td>
+      ${sat.map((_,j)=>`<td class="td-sat"><input type="number" min="1" max="4" step="1" value="${sat[j]||''}" onchange="updateFroidSat(${i},${j},this.value);renderFroidRow(${i})"></td>`).join('')}
+      <td><strong>${totQ}</strong></td>
+      <td><strong>${tauxQ}${tauxQ!=='—'?'%':''}</strong></td>
+      <td><textarea onchange="updateFroidPart(${i},'sugg',this.value)">${p.sugg||''}</textarea></td>
+      <td><button class="btn btn-danger btn-sm" onclick="removeFroidPart(${i})">🗑</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function updateFroidPart(i,k,v) { formationsFroid[currentFroidId].participants[i][k]=v; }
+function updateFroidAvant(i,j,v) { if(!formationsFroid[currentFroidId].participants[i].avant) formationsFroid[currentFroidId].participants[i].avant=[]; formationsFroid[currentFroidId].participants[i].avant[j]=v; }
+function updateFroidApres(i,j,v) { if(!formationsFroid[currentFroidId].participants[i].apres) formationsFroid[currentFroidId].participants[i].apres=[]; formationsFroid[currentFroidId].participants[i].apres[j]=v; }
+function updateFroidSat(i,j,v) { if(!formationsFroid[currentFroidId].participants[i].sat) formationsFroid[currentFroidId].participants[i].sat=[]; formationsFroid[currentFroidId].participants[i].sat[j]=v; }
+function updateFroidAuto(i,inp) { const ag=getAgent(inp.value||''); const el=document.getElementById('fn-'+i); if(el) el.textContent=ag?ag.nom:'—'; formationsFroid[currentFroidId].participants[i].mat=inp.value; }
+function renderFroidRow(i) { renderFroidTable(); } // simple re-render
+function removeFroidPart(i) { formationsFroid[currentFroidId].participants.splice(i,1); renderFroidTable(); }
+
+function saveFroid() {
+  const f = formationsFroid[currentFroidId];
+  f.titre = document.getElementById('f-titre').value;
+  f.organisme = document.getElementById('f-organisme').value;
+  f.lieu = document.getElementById('f-lieu').value;
+  f.debut = document.getElementById('f-debut').value;
+  f.fin = document.getElementById('f-fin').value;
+  f.duree = document.getElementById('f-duree').value;
+  f.comps = Array.from({length:8},(_,i) => (document.getElementById('comp-'+i)||{}).value||'');
+  save(); buildSelectors(); showNotif(`${f.ref} sauvegardée ✅`);
+}
+
+// ══ DASHBOARD ══
+function renderDashboard() {
+  const totalParticipants = formationsChaud.reduce((s,f) => s+f.participants.length, 0)
+    + formationsFroid.reduce((s,f) => s+f.participants.length, 0);
+  const chaudCount = formationsChaud.filter(f=>f.participants.length>0).length;
+  const froidCount = formationsFroid.filter(f=>f.participants.length>0).length;
+
+  // Moyenne globale chaud
+  const allMoys = formationsChaud.flatMap(f => f.participants.flatMap(p => {
+    const NOTES = ['salle','mat_ped','pause','meth','cas','qual','dur','obj','sat'];
+    return NOTES.map(k=>parseFloat(p[k])).filter(v=>!isNaN(v));
+  }));
+  const moyGlob = allMoys.length ? (allMoys.reduce((a,b)=>a+b,0)/allMoys.length).toFixed(2) : '—';
+
+  document.getElementById('dash-stats').innerHTML = `
+    <div class="dash-card or"><div class="dc-ico">🔥</div><div class="dc-label">Formations à Chaud</div><div class="dc-val">${chaudCount}</div><div class="dc-sub">formations saisies</div></div>
+    <div class="dash-card vert"><div class="dc-ico">❄️</div><div class="dc-label">Formations à Froid</div><div class="dc-val">${froidCount}</div><div class="dc-sub">formations saisies</div></div>
+    <div class="dash-card bleu"><div class="dc-ico">👥</div><div class="dc-label">Total Participations</div><div class="dc-val">${totalParticipants}</div><div class="dc-sub">toutes formations</div></div>
+    <div class="dash-card mauve"><div class="dc-ico">⭐</div><div class="dc-label">Moyenne Globale Chaud</div><div class="dc-val">${moyGlob}</div><div class="dc-sub">sur 4 points max</div></div>
+    <div class="dash-card orange"><div class="dc-ico">📋</div><div class="dc-label">Total Formations</div><div class="dc-val">${formationsChaud.length + formationsFroid.length}</div><div class="dc-sub">créées cette année</div></div>
+    <div class="dash-card rouge"><div class="dc-ico">🧑‍💼</div><div class="dc-label">Agents Répertoriés</div><div class="dc-val">${agents.length}</div><div class="dc-sub">dans la base de données</div></div>
+  `;
+
+  // Table accueil
+  const allF = new Set([...formationsChaud.map(f=>f.ref), ...formationsFroid.map(f=>f.ref)]);
+  const rows = [...allF].sort().map(ref => {
+    const fc = formationsChaud.find(f=>f.ref===ref);
+    const ff = formationsFroid.find(f=>f.ref===ref);
+    const titre = (fc&&fc.titre) || (ff&&ff.titre) || '—';
+    const nbP = (fc?fc.participants.length:0);
+    let moyC = '—', prog = '—', sat = '—';
+    if (fc && fc.participants.length) {
+      const NOTES = ['salle','mat_ped','pause','meth','cas','qual','dur','obj','sat'];
+      const vals = fc.participants.flatMap(p=>NOTES.map(k=>parseFloat(p[k])).filter(v=>!isNaN(v)));
+      if(vals.length) moyC = (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2);
+    }
+    if (ff && ff.participants.length) {
+      const avants = ff.participants.flatMap(p=>(p.avant||[]).filter(v=>v!=='').map(v=>parseFloat(v)));
+      const apres = ff.participants.flatMap(p=>(p.apres||[]).filter(v=>v!=='').map(v=>parseFloat(v)));
+      if(avants.length&&apres.length) prog = ((apres.reduce((a,b)=>a+b,0)/apres.length)-(avants.reduce((a,b)=>a+b,0)/avants.length)).toFixed(2);
+      const sats = ff.participants.flatMap(p=>(p.sat||[]).filter(v=>v!=='').map(v=>parseFloat(v)));
+      if(sats.length) sat = Math.round((sats.reduce((a,b)=>a+b,0)/(sats.length*4))*100)+'%';
+    }
+    const statut = (!fc&&!ff)?'Vide':(fc&&ff)?'<span style="color:var(--vert)">✅ Complet</span>':'<span style="color:var(--orange)">⚠️ Partiel</span>';
+    return `<tr><td><strong>${ref}</strong></td><td>${titre}</td><td>${nbP}</td><td>${moyC}</td><td>${prog!=='—'?'▲ '+prog:'—'}</td><td>${sat}</td><td>${statut}</td></tr>`;
+  });
+  document.getElementById('accueil-tbody').innerHTML = rows.join('') || '<tr><td colspan="7" style="text-align:center;color:var(--texte-léger);padding:24px">Aucune formation enregistrée — commencez par créer une évaluation à chaud ou à froid.</td></tr>';
+}
+
+// ══ SYNTHÈSE ══
+function renderSynthese() {
+  // Chaud
+  const NOTES = ['salle','mat_ped','pause','meth','cas','qual','dur','obj','sat'];
+  const crowsC = formationsChaud.filter(f=>f.participants.length>0).map(f => {
+    const moysC = NOTES.map(k=>{
+      const vals=f.participants.map(p=>parseFloat(p[k])).filter(v=>!isNaN(v));
+      return vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2):'—';
+    });
+    const allV=f.participants.flatMap(p=>NOTES.map(k=>parseFloat(p[k])).filter(v=>!isNaN(v)));
+    const moyG=allV.length?(allV.reduce((a,b)=>a+b,0)/allV.length).toFixed(2):'—';
+    return `<tr><td><strong>${f.ref}</strong></td><td>${f.titre||'—'}</td><td>${f.participants.length}</td>
+      ${moysC.map(m=>`<td>${m}</td>`).join('')}
+      <td><span class="moy-badge ${moyClass(parseFloat(moyG))}">${moyG}</span></td></tr>`;
+  });
+  document.getElementById('synth-chaud-tbody').innerHTML = crowsC.join('') || '<tr><td colspan="14" style="text-align:center;padding:20px;color:var(--texte-léger)">Aucune donnée</td></tr>';
+
+  // Froid
+  const crowsF = formationsFroid.filter(f=>f.participants.length>0).map(f => {
+    const avants = f.participants.flatMap(p=>(p.avant||[]).filter(v=>v!=='').map(v=>parseFloat(v)));
+    const apres = f.participants.flatMap(p=>(p.apres||[]).filter(v=>v!=='').map(v=>parseFloat(v)));
+    const sats = f.participants.flatMap(p=>(p.sat||[]).filter(v=>v!=='').map(v=>parseFloat(v)));
+    const moyAv = avants.length?(avants.reduce((a,b)=>a+b,0)/avants.length).toFixed(2):'—';
+    const moyAp = apres.length?(apres.reduce((a,b)=>a+b,0)/apres.length).toFixed(2):'—';
+    const prog = (moyAv!=='—'&&moyAp!=='—')?(parseFloat(moyAp)-parseFloat(moyAv)).toFixed(2):'—';
+    const tauxSat = sats.length?Math.round((sats.reduce((a,b)=>a+b,0)/(sats.length*4))*100)+'%':'—';
+    const satisfaits = f.participants.filter(p=>{
+      const s=(p.sat||[]).filter(v=>v!=='').map(v=>parseFloat(v));
+      return s.length&&(s.reduce((a,b)=>a+b,0)/s.length)>=3;
+    }).length;
+    return `<tr>
+      <td><strong>${f.ref}</strong></td><td>${f.titre||'—'}</td><td>${f.participants.length}</td>
+      <td>${moyAv}</td><td>${moyAp}</td>
+      <td class="${prog!=='—'&&parseFloat(prog)>=0?'prog-pos':'prog-neg'}">${prog!=='—'?'▲ '+prog:'—'}</td>
+      <td>${tauxSat}</td><td>${satisfaits}</td>
+    </tr>`;
+  });
+  document.getElementById('synth-froid-tbody').innerHTML = crowsF.join('') || '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--texte-léger)">Aucune donnée</td></tr>';
+}
+
+function switchTab(id, el) {
+  document.querySelectorAll('[id^="tab-"]').forEach(t=>t.style.display='none');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).style.display='block';
+  el.classList.add('active');
+}
+
+// ══ EXPORT ══
+function exportData() {
+  const data = {annee: anneeActive, agents, formationsChaud, formationsFroid, exported: new Date().toISOString()};
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `ANARE-CI_Evaluations_${anneeActive}_export.json`;
+  a.click();
+  showNotif('Export ' + anneeActive + ' téléchargé ✅');
+}
+
+// Auto-save toutes les 60s
+setInterval(() => { if(dirty) { save(); showNotif('Sauvegarde auto ✅'); } }, 60000);
+
+// Alerte avant fermeture si modifications non sauvegardées
+window.onbeforeunload = () => dirty ? 'Vous avez des modifications non sauvegardées.' : null;
+</script>
+</body>
+</html>
